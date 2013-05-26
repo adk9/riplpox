@@ -18,6 +18,7 @@ from pox.lib.packet.tcp import tcp
 from ripl.mn import topos
 
 from util import buildTopo, getRouting
+from mininet.util import macColonHex
 
 log = core.getLogger()
 
@@ -68,13 +69,12 @@ class Switch (EventMixin):
     msg.buffer_id = buffer_id
     self.connection.send(msg)
 
-  def install(self, port, match, buf = -1, idle_timeout = 0, hard_timeout = 0):
+  def install(self, port, match, idle_timeout = 0, hard_timeout = 0):
     msg = of.ofp_flow_mod()
     msg.match = match
     msg.idle_timeout = idle_timeout
     msg.hard_timeout = hard_timeout
     msg.actions.append(of.ofp_action_output(port = port))
-    msg.buffer_id = buf
     self.connection.send(msg)
 
   def _handle_ConnectionDown (self, event):
@@ -152,8 +152,8 @@ class RipLController(EventMixin):
 
     # Form OF match
     match = of.ofp_match()
-    match.dl_src = EthAddr(src).toRaw()
-    match.dl_dst = EthAddr(dst).toRaw()
+    match.dl_src = EthAddr(macColonHex(src)).toRaw()
+    match.dl_dst = EthAddr(macColonHex(dst)).toRaw()
 
     dst_host_name = self.t.id_gen(dpid = dst).name_str()
     final_out_port, ignore = self.t.port(route[-1], dst_host_name)
